@@ -1,17 +1,15 @@
 pipeline {
     agent { label 'jenkins-agent' }
-
     tools {
         jdk 'Java17'
         maven 'Maven3'
     }
 
     environment {
-        SONAR_TOKEN = credentials('jenkins-sonarqube-token')
+        SONAR_TOKEN = credentials('jenkins-sonarqube-token') // Inject the token securely
     }
 
     stages {
-
         stage("Cleanup Workspace") {
             steps {
                 cleanWs()
@@ -26,25 +24,26 @@ pipeline {
 
         stage("Build Application") {
             steps {
-                sh 'mvn clean package'
+                sh "mvn clean package"
             }
         }
 
         stage("Test Application") {
             steps {
-                sh 'mvn test'
+                sh "mvn test"
             }
         }
 
         stage("SonarQube Analysis") {
             steps {
-                withSonarQubeEnv('SonarQube') {
-                    sh '''
-                        mvn sonar:sonar \
-                          -Dsonar.projectKey=register-app \
-                          -Dsonar.host.url=$SONAR_HOST_URL \
-                          -Dsonar.login=$SONAR_TOKEN
-                    '''
+                script {
+                    withSonarQubeEnv('SonarQube') {
+                        sh """
+                            mvn sonar:sonar \
+                              -Dsonar.projectKey=register-app \
+                              -Dsonar.login=$SONAR_TOKEN
+                        """
+                    }
                 }
             }
         }
