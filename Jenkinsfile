@@ -38,7 +38,8 @@ pipeline {
         stage("SonarQube Analysis") {
             steps {
                 script {
-                    withSonarQubeEnv('SonarQube') { // must match name set in "Manage Jenkins > Configure System"
+                    // Use exact name of your SonarQube installation configured in Jenkins
+                    withSonarQubeEnv('sonarqube-server') {
                         sh """
                             mvn sonar:sonar \
                             -Dsonar.projectKey=register-app \
