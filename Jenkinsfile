@@ -34,15 +34,51 @@ pipeline {
             }
         }
 
-        stage("SonarQube Analysis") {
+        pipeline {
+    agent { label 'jenkins-agent' }
+    tools {
+        jdk 'Java17'
+        maven 'Maven3'
+    }
+    
+    stages{
+        stage("Cleanup Workspace"){
+                steps {
+                cleanWs()
+                }
+        }
+
+        stage("Checkout from SCM"){
+                steps {
+                    git branch: 'main', credentialsId: 'github', url: 'https://github.com/Soni-ak/register-app.git'
+                }
+        }
+
+        stage("Build Application"){
             steps {
-                script {
-                    withSonarQubeEnv('SonarQube') {
-                        sh """
-                            mvn sonar:sonar \
-                              -Dsonar.projectKey=register-app \
-                              -Dsonar.login=$SONAR_TOKEN
-                        """
+                sh "mvn clean package"
+            }
+
+       }
+
+       stage("Test Application"){
+           steps {
+                 sh "mvn test"
+           }
+        }
+       stage("SonarQube Analysis"){
+           steps {
+	           script {
+		            withSonarQubeEnv(credentialsId: 'jenkins-sonarqube-token') { 
+                    sh "mvn sonar:sonar"
+		              }
+	              }	
+              }
+          }
+       }
+  }
+
+                        
                     }
                 }
             }
